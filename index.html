@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lisotech AI - Interactive Console</title>
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --panel-bg: #161b22;
+            --border-color: #30363d;
+            --text-main: #c9d1d9;
+            --text-muted: #8b949e;
+            --accent: #58a6ff;
+            --accent-hover: #1f6feb;
+            --success: #238636;
+            --code-bg: #010409;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            background-color: var(--panel-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            font-size: 1.25rem;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-badge {
+            font-size: 0.8rem;
+            background: rgba(35, 134, 54, 0.2);
+            color: #3fb950;
+            border: 1px solid var(--success);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        main {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border-color);
+            background-color: var(--bg-color);
+        }
+
+        .chat-output {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 8px;
+            line-height: 1.5;
+            font-size: 0.95rem;
+            word-break: break-word;
+        }
+
+        .message.user {
+            background-color: var(--accent-hover);
+            color: #ffffff;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+
+        .message.ai {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
+
+        .message.ai pre {
+            background-color: var(--code-bg);
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 8px;
+            overflow-x: auto;
+            font-family: Consolas, Monaco, monospace;
+            font-size: 0.85rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .input-area {
+            padding: 15px 20px;
+            background-color: var(--panel-bg);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 10px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            background-color: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 10px 14px;
+            color: var(--text-main);
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--accent);
+        }
+
+        button {
+            background-color: var(--success);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 0 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #2ea043;
+        }
+
+        .sidebar {
+            width: 320px;
+            background-color: var(--panel-bg);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            gap: 15px;
+        }
+
+        .sidebar h3 {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+
+        .telemetry-box {
+            background-color: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px;
+            font-family: Consolas, Monaco, monospace;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .preset-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .preset-btn {
+            background-color: var(--code-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 8px 12px;
+            text-align: left;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .preset-btn:hover {
+            background-color: var(--border-color);
+            color: var(--accent);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            Lisotech AI Interface
+        </h1>
+        <div class="status-badge" id="system-status">System Operational (v2.1.0)</div>
+    </header>
+
+    <main>
+        <!-- Chat Console Area -->
+        <section class="chat-container">
+            <div class="chat-output" id="chat-output">
+                <div class="message ai">
+                    Hello! I am Lisotech AI v2.1.0, integrated directly into your web interface. How can I assist you today?
+                </div>
+            </div>
+            <div class="input-area">
+                <input type="text" id="user-input" placeholder="Type a command or query for Lisotech AI..." autocomplete="off">
+                <button id="send-btn">Send</button>
+            </div>
+        </section>
+
+        <!-- Sidebar Telemetry & Quick Prompts -->
+        <aside class="sidebar">
+            <h3>Quick Actions</h3>
+            <div class="preset-buttons">
+                <button class="preset-btn" onclick="sendPreset('Hello Lisotech AI!')">👋 Greeting</button>
+                <button class="preset-btn" onclick="sendPreset('Can you generate python code for data analysis?')">💻 Code Generation</button>
+                <button class="preset-btn" onclick="sendPreset('What is your system status?')">📊 System Status</button>
+            </div>
+
+            <h3 style="margin-top: 15px;">Telemetry Logs</h3>
+            <div class="telemetry-box" id="telemetry-box">
+                [00:00:00] [INFO] LisotechAI Engine v2.1.0 initialized.<br>
+            </div>
+        </aside>
+    </main>
+
+    <script>
+        // Updated Frontend-Embedded Lisotech Engine logic
+        class LisotechEngineWeb {
+            constructor(version = "2.1.0") {
+                this.version = version;
+                this.memory = [];
+            }
+
+            processQuery(prompt) {
+                const startTime = performance.now();
+                const intent = this._detectIntent(prompt);
+                const responseContent = this._generateResponse(intent, prompt);
+                const executionTime = ((performance.now() - startTime) / 1000).toFixed(4);
+
+                const result = {
+                    ai_name: "Lisotech AI",
+                    version: this.version,
+                    intent: intent,
+                    response: responseContent,
+                    execution_time_sec: Number(executionTime)
+                };
+
+                this.memory.push(result);
+                return result;
+            }
+
+            _detectIntent(prompt) {
+                const promptLower = prompt.toLowerCase();
+                if (promptLower.includes("code") || promptLower.includes("program")) {
+                    return "CODE_GENERATION";
+                } else if (promptLower.includes("hello") || promptLower.includes("hi")) {
+                    return "GREETING";
+                } else if (promptLower.includes("status") || promptLower.includes("system")) {
+                    return "SYSTEM_STATUS";
+                } else {
+                    return "GENERAL_INQUIRY";
+                }
+            }
+
+            _generateResponse(intent, prompt) {
+                const responses = {
+                    "GREETING": "Hello! I am Lisotech AI, your advanced technical collaborator. How can I assist you today?",
+                    "CODE_GENERATION": `Analyzing code requirements for: "${prompt}". Syntax structure compiled successfully.\n\n# Sample Generated Code\nimport pandas as pd\ndf = pd.read_csv('data.csv')\nprint(df.describe())`,
+                    "SYSTEM_STATUS": `All Lisotech AI subsystems are fully operational. Version: ${this.version}. Memory logs: Active.`,
+                    "GENERAL_INQUIRY": `Processed your input successfully through the Lisotech neural pipeline.`
+                };
+                return responses[intent] || "Query processed by Lisotech AI.";
+            }
+        }
+
+        // Initialize Core System
+        const lisotech = new LisotechEngineWeb("2.1.0");
+
+        const chatOutput = document.getElementById("chat-output");
+        const userInput = document.getElementById("user-input");
+        const sendBtn = document.getElementById("send-btn");
+        const telemetryBox = document.getElementById("telemetry-box");
+
+        function logTelemetry(text) {
+            const timestamp = new Date().toLocaleTimeString();
+            telemetryBox.innerHTML += `[${timestamp}] ${text}<br>`;
+            telemetryBox.scrollTop = telemetryBox.scrollHeight;
+        }
+
+        function appendMessage(text, sender, isCode = false) {
+            const messageDiv = document.createElement("div");
+            messageDiv.classList.add("message", sender);
+            
+            if (isCode) {
+                messageDiv.innerHTML = text.replace(/\n/g, '<br>');
+            } else {
+                messageDiv.textContent = text;
+            }
+            
+            chatOutput.appendChild(messageDiv);
+            chatOutput.scrollTop = chatOutput.scrollHeight;
+        }
+
+        function handleUserSubmit() {
+            const text = userInput.value.trim();
+            if (!text) return;
+
+            // Append User Message
+            appendMessage(text, "user");
+            userInput.value = "";
+            logTelemetry(`INFO: Processing prompt -> "${text}"`);
+
+            // Process via Lisotech Engine
+            setTimeout(() => {
+                const result = lisotech.processQuery(text);
+                
+                let formattedResponse = result.response;
+                let isCode = false;
+                
+                if (result.intent === "CODE_GENERATION") {
+                    const parts = result.response.split("\n\n");
+                    formattedResponse = `${parts[0]}<pre>${parts[1]}</pre>`;
+                    isCode = true;
+                }
+
+                appendMessage(formattedResponse, "ai", isCode);
+                logTelemetry(`SUCCESS: Intent [${result.intent}] processed in ${result.execution_time_sec}s`);
+            }, 300);
+        }
+
+        function sendPreset(promptText) {
+            userInput.value = promptText;
+            handleUserSubmit();
+        }
+
+        sendBtn.addEventListener("click", handleUserSubmit);
+        userInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
+                handleUserSubmit();
+            }
+        });
+    </script>
+</body>
+</html>
